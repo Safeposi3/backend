@@ -1,24 +1,99 @@
 from django.db import models
-from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.conf import settings
+from uuid import uuid4
 
-class EmailOrUsernameBackend(ModelBackend):
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        UserModel = get_user_model()
-        try:
-            user = UserModel.objects.get(email=username)
-        except UserModel.DoesNotExist:
-            try:
-                user = UserModel.objects.get(username=username)
-            except UserModel.DoesNotExist:
-                return None
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-        if user.check_password(password):
-            return user
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
 
-    def get_user(self, user_id):
-        UserModel = get_user_model()
-        try:
-            return UserModel.objects.get(pk=user_id)
-        except UserModel.DoesNotExist:
-            return None
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    birthdate = models.DateField(null=True, blank=True)
+    phonenumber = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=50, null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    dni = models.CharField(max_length=20, null=True, blank=True)
+    credit_card = models.CharField(max_length=20, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name'] 
+
+    def get_full_name(self):
+        return f'{self.first_name} {self.last_name}'
+
+    def get_short_name(self):
+        return self.first_name
+
+    def __str__(self): 
+        return self.email
+
+# Create your models here.
+class Buoys(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    name = models.CharField(max_length=50)
+    location = models.CharField(max_length=50)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def get_reservations(self):
+        # This will return a QuerySet of all reservations for this buoy
+        return self.reservations.all()
+
+#Ships model:
+class Ship(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    owner = models.ForeignKey(CustomUser, related_name='ships', on_delete=models.CASCADE)
+    length = models.FloatField()
+    ship_title = models.FileField(upload_to='ship_titles/',blank=True,null=True)
+    ship_registration = models.CharField(max_length=100)
+
+class Payment(models.Model):
+    PAYMENT_METHOD_CHOICES = (
+        ('stripe', 'Stripe'),
+        ('paypal', 'Paypal'),
+    )
+
+    method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES)
+    transaction_id = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    # You can add additional fields as required
+
+    def __str__(self):
+        return f'{self.method} - {self.transaction_id}'
+    
+class Reservation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    buoy = models.ForeignKey(Buoys, related_name='reservations', on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
+
+
+    def __str__(self):
+        return f'{self.user} - {self.buoy} - {self.start_time} to {self.end_time}'
+    
+
