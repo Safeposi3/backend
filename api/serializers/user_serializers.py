@@ -68,5 +68,4 @@ class UpdateSerializer(serializers.ModelSerializer):
             'postal_code',
             'city',
             'dni',
-            'credit_card',
         ]

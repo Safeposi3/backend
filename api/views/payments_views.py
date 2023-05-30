@@ -3,13 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-
+from api.models import Reservation
 class CreatePaymentIntentView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             amount = int(request.data.get('amount'))  # amount should be in cents
             payment_method_id = request.data.get('paymentMethodId')
-
+            reservation_id = request.data.get('reservationId')  # Get the reservation ID from the request
             stripe.api_key = settings.STRIPE_SECRET_KEY
 
             intent = stripe.PaymentIntent.create(
@@ -18,7 +18,10 @@ class CreatePaymentIntentView(APIView):
                 payment_method=payment_method_id,
                 confirm=True,
             )
-
+            if intent.status == 'succeeded':
+                reservation = Reservation.objects.get(id=reservation_id)
+                reservation.status = 'PAID'
+                reservation.save()
             return Response(status=status.HTTP_200_OK, data={'client_secret': intent.client_secret})
 
         except stripe.error.CardError as e:

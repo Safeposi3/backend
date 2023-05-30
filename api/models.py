@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
 from uuid import uuid4
+from django.utils import timezone
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -32,7 +33,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     dni = models.CharField(max_length=20, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
@@ -98,15 +100,28 @@ class Buoys(models.Model):
         self.price2 = self.PRICES[self.size]['price2']
         super().save(*args, **kwargs)
 class Reservation(models.Model):
+    STATUS_CHOICES = (
+        ('UNPAID', 'Unpaid'),
+        ('PAID', 'Paid'),
+        ('CANCELLED', 'Cancelled'),
+    )
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     buoy = models.ForeignKey(Buoys, related_name='reservations', on_delete=models.CASCADE,null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='UNPAID')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'{self.user} - {self.buoy} - {self.start_time} to {self.end_time}'
-    
+        
+    def save(self, *args, **kwargs):
+            if not self.id:  # Only execute this logic if the reservation is being created (not updated)
+                six_hours_later = timezone.now() + timezone.timedelta(hours=6)
+                if self.status == 'UNPAID' and timezone.now() >= six_hours_later:
+                    self.status = 'CANCELLED'  # Update the status to 'CANCELLED' if it's within 6 hours after creation
+            super().save(*args, **kwargs)
 
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = (
