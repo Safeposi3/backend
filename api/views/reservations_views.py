@@ -33,3 +33,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Response("This buoy has already been booked for the specified time.", status=status.HTTP_400_BAD_REQUEST)
 
         return super().create(request, *args, **kwargs)
+    def get_queryset(self):
+        return Reservation.objects.filter(user=self.request.user)
+    
+class AdminReservationViewSet(viewsets.ModelViewSet):
+    queryset = Reservation.objects.all()
+    serializer_class = ReservationSerializer
+    permission_classes = [permissions.IsAdminUser]

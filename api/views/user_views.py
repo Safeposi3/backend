@@ -1,8 +1,10 @@
 from rest_framework.response import Response
+from django.contrib.auth import get_user_model
 from knox.models import AuthToken
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
+from rest_framework import viewsets, permissions
 from django.contrib.auth import authenticate
 from api.serializers import CustomUserSerializer, RegisterSerializer, UpdateSerializer
 
@@ -66,4 +68,21 @@ class UserDetail(APIView):
         return Response(serializer.data)
 
 
+class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAdminUser]
 
+class EmailVerificationView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email', None)
+        if email is None:
+            return Response({'error': 'Email is required.'}, status=HTTP_400_BAD_REQUEST)
+
+        user_model = get_user_model()
+        if user_model.objects.filter(email=email).exists():
+            return Response({'error': 'The email is already registered.'}, status=HTTP_400_BAD_REQUEST)
+        
+        return Response({'message': 'The email is not registered.'}, status=HTTP_200_OK)

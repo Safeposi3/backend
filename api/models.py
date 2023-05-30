@@ -30,14 +30,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     postal_code = models.CharField(max_length=20, null=True, blank=True)
     city = models.CharField(max_length=50, null=True, blank=True)
     dni = models.CharField(max_length=20, null=True, blank=True)
-    credit_card = models.CharField(max_length=20, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name'] 
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'birthdate', 'phonenumber', 'country', 'address', 'postal_code', 'city', 'dni'] 
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
@@ -47,21 +46,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self): 
         return self.email
-
-# Create your models here.
-class Buoys(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    name = models.CharField(max_length=50)
-    location = models.CharField(max_length=50)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def get_reservations(self):
-        # This will return a QuerySet of all reservations for this buoy
-        return self.reservations.all()
-
 #Ships model:
 class Ship(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -69,6 +53,60 @@ class Ship(models.Model):
     length = models.FloatField()
     ship_title = models.FileField(upload_to='ship_titles/',blank=True,null=True)
     ship_registration = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+# Create your models here.
+class Buoys(models.Model):
+    SIZES = (
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+    )
+    PRICES = {
+        'S': {
+            'price1': 0.38,
+            'price2': 0.75,
+        },
+        'M': {
+            'price1': 0.61,
+            'price2': 1.21,
+        },
+        'L': {
+            'price1': 1.06,
+            'price2': 2.77,
+        },
+        'XL': {
+            'price1': 3.26,
+            'price2': 8.52,
+        },
+    }
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    size = models.CharField(max_length=10, choices=SIZES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    price1 = models.FloatField()
+    price2 = models.FloatField()
+    def get_reservations(self):
+        # This will return a QuerySet of all reservations for this buoy
+        return self.reservations.all()
+    def save(self, *args, **kwargs):
+        self.price1 = self.PRICES[self.size]['price1']
+        self.price2 = self.PRICES[self.size]['price2']
+        super().save(*args, **kwargs)
+class Reservation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    buoy = models.ForeignKey(Buoys, related_name='reservations', on_delete=models.CASCADE,null=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    def __str__(self):
+        return f'{self.user} - {self.buoy} - {self.start_time} to {self.end_time}'
+    
 
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = (
@@ -83,17 +121,3 @@ class Payment(models.Model):
 
     def __str__(self):
         return f'{self.method} - {self.transaction_id}'
-    
-class Reservation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    buoy = models.ForeignKey(Buoys, related_name='reservations', on_delete=models.CASCADE)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
-
-
-    def __str__(self):
-        return f'{self.user} - {self.buoy} - {self.start_time} to {self.end_time}'
-    
-

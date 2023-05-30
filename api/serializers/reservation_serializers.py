@@ -1,10 +1,14 @@
 from rest_framework import serializers
-from api.models import Reservation
+from api.models import Reservation,Buoys
 
 class ReservationSerializer(serializers.ModelSerializer):
+    buoy = serializers.SlugRelatedField(slug_field='id', queryset=Buoys.objects.all())
+    
     class Meta:
         model = Reservation
-        fields = '__all__'
+        fields = ['id', 'user', 'buoy', 'start_time', 'end_time']
+        read_only_fields = ['user']
+    
 
     def validate(self, data):
         """
