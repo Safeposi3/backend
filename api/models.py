@@ -118,7 +118,7 @@ class Reservation(models.Model):
         
     def save(self, *args, **kwargs):
             if not self.id:  # Only execute this logic if the reservation is being created (not updated)
-                six_hours_later = timezone.now() + timezone.timedelta(hours=6)
+                six_hours_later = timezone.now() + timezone.timedelta(minutes=5)
                 if self.status == 'UNPAID' and timezone.now() >= six_hours_later:
                     self.status = 'CANCELLED'  # Update the status to 'CANCELLED' if it's within 6 hours after creation
             super().save(*args, **kwargs)

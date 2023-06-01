@@ -7,9 +7,9 @@ from django.contrib.auth import login
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser  # use your custom User model
-        fields = ('email', 'first_name', 'last_name', 'password',)  # adjust the fields as needed
-
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name', 'password', 'birthdate', 'phonenumber', 'country', 'address', 'postal_code', 'city', 'dni')
+        
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {
@@ -17,11 +17,18 @@ class RegisterSerializer(serializers.ModelSerializer):
                 'allow_blank': False,
                 'validators': [
                     validators.UniqueValidator(
-                        queryset=CustomUser.objects.all(),  # use your custom User model
+                        queryset=CustomUser.objects.all(),
                         message='A user with that email already exists.'
                     )
                 ]
-            }
+            },
+            'birthdate': {'required': False},
+            'phonenumber': {'required': False},
+            'country': {'required': False},
+            'address': {'required': False},
+            'postal_code': {'required': False},
+            'city': {'required': False},
+            'dni': {'required': False},
         }
 
     def create(self, validated_data):
@@ -29,6 +36,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
+            birthdate=validated_data['birthdate'],
+            phonenumber=validated_data['phonenumber'],
+            country=validated_data['country'],
+            address=validated_data['address'],
+            postal_code=validated_data['postal_code'],
+            city=validated_data['city'],
+            dni=validated_data['dni'],
         )
         user.set_password(validated_data['password'])
         user.save()

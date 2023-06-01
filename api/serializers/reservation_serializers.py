@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from api.models import Reservation,Buoys
-
+from api.serializers import BuoysSerializer
 class ReservationSerializer(serializers.ModelSerializer):
-    buoy = serializers.SlugRelatedField(slug_field='id', queryset=Buoys.objects.all())
-    
+    buoy = BuoysSerializer(read_only=True)  # Use BuoysSerializer
+    buoy_id = serializers.PrimaryKeyRelatedField(source='buoy', queryset=Buoys.objects.all(), write_only=True)
+
     class Meta:
         model = Reservation
-        fields = ['id', 'user', 'buoy', 'start_time', 'end_time', 'status', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'buoy', 'buoy_id', 'start_time', 'end_time', 'status', 'created_at', 'updated_at']
         read_only_fields = ['user']
     
 
