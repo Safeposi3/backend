@@ -5,7 +5,10 @@ class SimpleBuoysSerializer(serializers.ModelSerializer):
     class Meta:
         model = Buoys
         fields = ['id', 'latitude', 'longitude', 'size']
-
+class SimpleReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['id', 'user', 'start_time', 'end_time', 'status', 'created_at', ]
 
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,7 +36,7 @@ class BuoysSerializer(serializers.ModelSerializer):
         read_only_fields = ['price1', 'price2']
 
     def to_representation(self, instance):
-        self.fields['reservations'] = ReservationSerializer(many=True, read_only=True)
+        self.fields['reservations'] = SimpleReservationSerializer(many=True, read_only=True)
         return super().to_representation(instance)
     
     def create(self, validated_data):
