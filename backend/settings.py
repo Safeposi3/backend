@@ -114,7 +114,7 @@ DATABASES = {
 #     }
 # }
 
-STRIPE_SECRET_KEY = 'hehe'
+STRIPE_SECRET_KEY = 'sk_test_51Mu4D7KM3lYOgyCun9rYhzpKGwOBKCV4JDEsGpwmv0PfwMbChZKQKqAmxE1l9zF0RlLdKxMSQf5QaaFbfyLoUG4300GZo0i5Cb'
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
