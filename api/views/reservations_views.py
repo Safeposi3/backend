@@ -23,7 +23,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         buoy_id = request.data.get('buoy')
         start_time = request.data.get('start_time')
         end_time = request.data.get('end_time')
-
+        
         if not buoy_id or not start_time or not end_time:
             return Response("Invalid request. Please provide buoy, start_time, and end_time.", status=status.HTTP_400_BAD_REQUEST)
 
