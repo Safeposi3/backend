@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from api.models import Reservation, Buoys
 
+class SimpleBuoysSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Buoys
+        fields = ['id', 'latitude', 'longitude', 'size']
+
+
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
@@ -16,7 +22,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        self.fields['buoy'] = BuoysSerializer(read_only=True)
+        self.fields['buoy'] = SimpleBuoysSerializer(read_only=True)
         return super().to_representation(instance)
 
 
@@ -34,3 +40,4 @@ class BuoysSerializer(serializers.ModelSerializer):
         # Remove the price1 and price2 fields from the validated data
         validated_data.pop('price1', None)
         validated_data.pop('price2', None)
+        return Buoys.objects.create(**validated_data)

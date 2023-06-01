@@ -26,12 +26,12 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'yeyeyeyey'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["env-backend.eba-vz9ygmdb.us-east-1.elasticbeanstalk.com"]
+ALLOWED_HOSTS = ["oceanbluereef.pythonanywhere.com"]
 
 
 # Application definition
@@ -69,7 +69,7 @@ CORS_ORIGIN_ALLOW_ALL = False
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    # Add any other origins that you want to allow
+    '*'
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -114,7 +114,7 @@ DATABASES = {
 #     }
 # }
 
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_SECRET_KEY = 'hehe'
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
