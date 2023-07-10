@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'knox',
-
     'api',
 ]
 
